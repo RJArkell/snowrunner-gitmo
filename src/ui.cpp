@@ -119,7 +119,7 @@ static bool Hit(const char* id, ImVec2 a, ImVec2 b) {
 // mouse, so a sheet drawn straight onto the phone would sit behind those lists and lose its
 // clicks to them. inputs=false lets the mouse through (the glass).
 #ifdef GITMO_TEST
-static bool OldSheets() { static int v = getenv("GITMO_TEST_OLDSHEETS") ? 1 : 0; return v != 0; }   // A/B: draw sheets the 0.9.11 way
+static bool OldSheets() { static int v = gitmo_shared::IsEnvironmentVariableSet("GITMO_TEST_OLDSHEETS") ? 1 : 0; return v != 0; }   // A/B: draw sheets the 0.9.11 way
 #endif
 static void BeginOverlay(const char* id, ImVec2 a, ImVec2 b, bool inputs) {
 #ifdef GITMO_TEST
