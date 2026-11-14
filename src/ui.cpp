@@ -880,7 +880,7 @@ static void IncomingSheet(const tx::Incoming& in, ImVec2 a, ImVec2 b) {
 }
 
 #ifdef GITMO_TEST
-// Fake transfers for the screenshot phases 9-14.
+// Fake transfers for screenshot phases 9-14 and the receive-overlay regression at 46.
 static TxView DemoTx(int phase) {
     TxView v; v.ready = true;
     uint64_t now = GetTickCount64();
@@ -892,9 +892,9 @@ static TxView DemoTx(int phase) {
     if (phase == 11) { o.st = tx::Out::Asked; v.outs.push_back(o); }
     if (phase == 13) { o.st = tx::Out::Done; v.outs.push_back(o); }
     tx::Incoming i; i.peer = 2; i.id = 0x22; i.amount = 4000; i.name = "Bob"; i.created = now - 9000;
-    if (phase == 12 || phase == 46) { i.st = tx::In::Prompt; v.ins.push_back(i); }
-    if (phase == 14) { i.st = tx::In::Credited; i.seen = false; v.ins.push_back(i); }
-    if (phase == 44 || phase == 48 || phase == 49) { i.st = tx::In::Void; i.seen = false; i.why = "Bob canceled"; v.ins.push_back(i); }
+    if (phase == 12) { i.st = tx::In::Prompt; v.ins.push_back(i); }
+    if (phase == 14 || phase == 46) { i.st = tx::In::Credited; i.seen = false; v.ins.push_back(i); }
+    if (phase == 44) { i.st = tx::In::Void; i.seen = false; i.why = "Bob canceled"; v.ins.push_back(i); }
     return v;
 }
 #endif
@@ -1663,8 +1663,10 @@ static void ScreenSmsChat(ImVec2 a, ImVec2 b) {
     ImGui::SetNextItemWidth(iw);
     bool refocus = g_focusDraft && !g_behindSheet;
     if (refocus) { ImGui::SetKeyboardFocusHere(); g_focusDraft = false; }
-    bool enter = !g_behindSheet && ImGui::InputText("##draft", g_draft, sizeof g_draft,
-                                                    ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackAlways, DraftCallback);
+    ImGui::BeginDisabled(g_behindSheet);
+    bool enter = ImGui::InputText("##draft", g_draft, sizeof g_draft,
+                                  ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackAlways, DraftCallback);
+    ImGui::EndDisabled();
     // tapping the text field: back to typing, like a phone. Only a real tap counts: Gitmo
     // putting the cursor back after an emoji activates the field a frame later, with no click.
     if (!g_behindSheet && ImGui::IsMouseClicked(0) && ImGui::IsItemHovered()) { g_emojiOpen = false; if (g_photoUi == PhPanel) g_photoUi = PhNone; }
@@ -2248,6 +2250,7 @@ void UI_Draw() {
     static int lastPhase = -1;
     int phase = g_testFrame / 300;   // 0 drawer, 1 gitmo, 2 activity, 3 settings, 4 sheet, 5 dark drawer cracked, 6 dark settings cracked, 7 dead, 8 dead charging
                                      // 9 send: pick, 10 amount, 11 waiting, 12 incoming request (dark), 13 sent, 14 received over the drawer
+                                     // 46 received-transfer sheet over an open SMS chat
     if (phase != lastPhase && phase >= 35) {
         lastPhase = phase;
         g_sheet = false; g_captureKey = false; g_cfg.cracked = false; g_chat = 0; g_emojiOpen = false; g_photoUi = PhNone;
